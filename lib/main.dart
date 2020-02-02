@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:luga/providers/cart.dart';
+import 'package:luga/screens/cart_screen.dart';
 import 'package:provider/provider.dart';
 
 import './screens/products_overview_screen.dart';
@@ -10,23 +12,26 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: Products(),),
+          ChangeNotifierProvider.value(value: Cart(),),
+        ],
+        child: MaterialApp(
 
-
-    return ChangeNotifierProvider(
-      create: (ctx) => Products(),
-      child: MaterialApp(
-
-        title: 'Luga Pasal',
-        theme: ThemeData(
-          primarySwatch: Colors.green,
-          accentColor: Colors.blueAccent,
-          fontFamily: 'Lato',
+          title: 'Luga Pasal',
+          theme: ThemeData(
+            primarySwatch: Colors.green,
+            accentColor: Colors.deepOrangeAccent,
+            fontFamily: 'Lato',
+          ),
+          home: ProductsOverviewScreen(),
+          routes: {
+            ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+            CartScreen.routeName: (ctx) => CartScreen(),
+          },
         ),
-        home: ProductsOverviewScreen(),
-        routes: {
-          ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
-        },
-      ),
     );
+
   }
 }
