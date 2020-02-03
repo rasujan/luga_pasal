@@ -16,7 +16,7 @@ class ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final product = Provider.of<Product>(context, listen: false);
+    final product = Provider.of<Product>(context);
     final cart = Provider.of<Cart>(context, listen: false);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -37,10 +37,9 @@ class ProductItem extends StatelessWidget {
           ),
           footer: GridTileBar(
             leading: IconButton(
-              icon: Icon(
-                  product.isFavorite ? Icons.favorite  : Icons.favorite_border),
+              icon: Icon(Icons.favorite),
               onPressed: () {product.toggleFavoriteStatus();},
-              color: product.isFavorite ? Colors.red : Colors.white,
+              color: product.isFavorite ? Colors.red : Theme.of(context).primaryColorLight,
             ),
             backgroundColor: Colors.black26,
             title: Text(
@@ -48,7 +47,7 @@ class ProductItem extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             trailing: IconButton(
-              icon: Icon(Icons.shopping_cart),
+              icon: Icon(Icons.shopping_cart, color: Theme.of(context).primaryColorLight,),
               onPressed: () {
                 cart.addItem(product.id, product.price, product.title);
               },
