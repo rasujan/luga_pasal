@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luga/providers/cart.dart';
 import 'package:luga/screens/cart_screen.dart';
+import 'package:luga/widgets/app_drawer.dart';
 import 'package:luga/widgets/badge.dart';
 import 'package:provider/provider.dart';
 
@@ -65,7 +66,9 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
             )
 
 
-          ]),
+          ],
+      ),
+      drawer: AppDrawer(),
       body: ProductsGrid(_showOnlyFav),
     );
   }
