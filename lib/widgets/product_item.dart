@@ -3,6 +3,7 @@ import 'package:luga/providers/product.dart';
 import 'package:provider/provider.dart';
 import '../screens/product_detail_screen.dart';
 import '../providers/cart.dart';
+
 class ProductItem extends StatelessWidget {
 //  final String id;
 //  final String title;
@@ -38,8 +39,12 @@ class ProductItem extends StatelessWidget {
           footer: GridTileBar(
             leading: IconButton(
               icon: Icon(Icons.favorite),
-              onPressed: () {product.toggleFavoriteStatus();},
-              color: product.isFavorite ? Colors.red : Theme.of(context).primaryColorLight,
+              onPressed: () {
+                product.toggleFavoriteStatus();
+              },
+              color: product.isFavorite
+                  ? Colors.red
+                  : Theme.of(context).primaryColorLight,
             ),
             backgroundColor: Colors.black26,
             title: Text(
@@ -47,9 +52,27 @@ class ProductItem extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             trailing: IconButton(
-              icon: Icon(Icons.shopping_cart, color: Theme.of(context).primaryColorLight,),
+              icon: Icon(
+                Icons.shopping_cart,
+                color: Theme.of(context).primaryColorLight,
+              ),
               onPressed: () {
                 cart.addItem(product.id, product.price, product.title);
+                Scaffold.of(context).hideCurrentSnackBar();
+                Scaffold.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Added item to cart.',
+                    ),
+                    duration: Duration(seconds: 2),
+                    action: SnackBarAction(
+                      label: 'Undo',
+                      onPressed: () {
+                        cart.removeSingleItem(product.id);
+                      },
+                    ),
+                  ),
+                );
               },
             ),
           ),
