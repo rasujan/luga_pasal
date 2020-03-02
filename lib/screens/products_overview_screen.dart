@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:luga/providers/cart.dart';
-import 'package:luga/screens/cart_screen.dart';
-import 'package:luga/widgets/app_drawer.dart';
-import 'package:luga/widgets/badge.dart';
 import 'package:provider/provider.dart';
 
-//import 'package:luga/providers/products.dart';
-//import 'package:provider/provider.dart';
-
+import '../widgets/app_drawer.dart';
 import '../widgets/product_grid.dart';
+import '../widgets/badge.dart';
+import '../providers/cart.dart';
+import './cart_screen.dart';
+import '../providers/products.dart';
 
-enum FilterOptions { Favorites, All }
+enum FilterOptions {
+  Favorites,
+  All,
+}
 
 class ProductsOverviewScreen extends StatefulWidget {
   @override
@@ -18,58 +19,87 @@ class ProductsOverviewScreen extends StatefulWidget {
 }
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
-  var _showOnlyFav = false;
+  var _showOnlyFavorites = false;
+  var _isInit = true;
+  var _isLoading = false;
+
+  @override
+  void initState() {
+    // Provider.of<Products>(context).fetchAndSetProducts(); // WON'T WORK!
+    // Future.delayed(Duration.zero).then((_) {
+    //   Provider.of<Products>(context).fetchAndSetProducts();
+    // });
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    if (_isInit) {
+      setState(() {
+        _isLoading = true;
+      });
+      Provider.of<Products>(context).fetchAndSetProducts().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
+    _isInit = false;
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
-//    final productsContainer = Provider.of<Products>(context, listen: false);
-
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-          title: Text("Luga Pasal"),
-          actions: <Widget>[
-            PopupMenuButton(
-              onSelected: (FilterOptions selectedValue) {
-                setState(() {
-                  if (selectedValue == FilterOptions.Favorites) {
-                    _showOnlyFav = true;
-                  } else {
-                    _showOnlyFav = false;
-                  }
-                });
-              },
-              icon: Icon(
-                Icons.more_vert,
-              ),
-              itemBuilder: (_) =>
-              [
-                PopupMenuItem(
-                    child: Text('Favorite'), value: FilterOptions.Favorites),
-                PopupMenuItem(child: Text('All'), value: FilterOptions.All),
-              ],
+        title: Text('MyShop'),
+        actions: <Widget>[
+          PopupMenuButton(
+            onSelected: (FilterOptions selectedValue) {
+              setState(() {
+                if (selectedValue == FilterOptions.Favorites) {
+                  _showOnlyFavorites = true;
+                } else {
+                  _showOnlyFavorites = false;
+                }
+              });
+            },
+            icon: Icon(
+              Icons.more_vert,
             ),
-            Consumer<Cart>(builder: (_, cart, ch) =>
-                Badge(
-                  child: ch,
-                  value: cart.itemCount.toString(),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.shopping_cart,
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(CartScreen.routeName);
-                  },
-                ),
-            )
-
-
-          ],
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                child: Text('Only Favorites'),
+                value: FilterOptions.Favorites,
+              ),
+              PopupMenuItem(
+                child: Text('Show All'),
+                value: FilterOptions.All,
+              ),
+            ],
+          ),
+          Consumer<Cart>(
+            builder: (_, cart, ch) => Badge(
+              child: ch,
+              value: cart.itemCount.toString(),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.shopping_cart,
+              ),
+              onPressed: () {
+                Navigator.of(context).pushNamed(CartScreen.routeName);
+              },
+            ),
+          ),
+        ],
       ),
       drawer: AppDrawer(),
-      body: ProductsGrid(_showOnlyFav),
+      body: _isLoading
+          ? Center(
+        child: CircularProgressIndicator(),
+      )
+          : ProductsGrid(_showOnlyFavorites),
     );
   }
 }

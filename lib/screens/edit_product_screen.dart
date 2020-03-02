@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:luga/providers/product.dart';
-import 'package:luga/providers/products.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/product.dart';
+import '../providers/products.dart';
 
 class EditProductScreen extends StatefulWidget {
   static const routeName = '/edit-product';
@@ -14,10 +14,9 @@ class EditProductScreen extends StatefulWidget {
 class _EditProductScreenState extends State<EditProductScreen> {
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
-  final _imageUrlController = TextEditingController();
-  final _imageUrlFocusNode = FocusNode();
+  final _imageURLController = TextEditingController();
+  final _imageURLFocusNode = FocusNode();
   final _form = GlobalKey<FormState>();
-
   var _editedProduct = Product(
     id: null,
     title: '',
@@ -25,30 +24,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
     description: '',
     imageURL: '',
   );
-
   var _initValues = {
     'title': '',
     'description': '',
     'price': '',
-    'imageURL': ''
+    'imageURL': '',
   };
-
   var _isInit = true;
   var _isLoading = false;
 
   @override
   void initState() {
-    _imageUrlFocusNode.addListener(_updateImageUrl);
+    _imageURLFocusNode.addListener(_updateImageUrl);
     super.initState();
   }
 
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      final productId = ModalRoute
-          .of(context)
-          .settings
-          .arguments as String;
+      final productId = ModalRoute.of(context).settings.arguments as String;
       if (productId != null) {
         _editedProduct =
             Provider.of<Products>(context, listen: false).findById(productId);
@@ -56,29 +50,35 @@ class _EditProductScreenState extends State<EditProductScreen> {
           'title': _editedProduct.title,
           'description': _editedProduct.description,
           'price': _editedProduct.price.toString(),
-//          'imageURL': _editedProduct.imageURL,
+          // 'imageURL': _editedProduct.imageURL,
           'imageURL': '',
         };
-        _imageUrlController.text = _editedProduct.imageURL;
+        _imageURLController.text = _editedProduct.imageURL;
       }
     }
     _isInit = false;
-
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    _imageUrlFocusNode.removeListener(_updateImageUrl);
+    _imageURLFocusNode.removeListener(_updateImageUrl);
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
-    _imageUrlController.dispose();
-    _imageUrlFocusNode.dispose();
+    _imageURLController.dispose();
+    _imageURLFocusNode.dispose();
     super.dispose();
   }
 
   void _updateImageUrl() {
-    if (!_imageUrlFocusNode.hasFocus) {
+    if (!_imageURLFocusNode.hasFocus) {
+      if ((!_imageURLController.text.startsWith('http') &&
+          !_imageURLController.text.startsWith('https')) ||
+          (!_imageURLController.text.endsWith('.png') &&
+              !_imageURLController.text.endsWith('.jpg') &&
+              !_imageURLController.text.endsWith('.jpeg'))) {
+        return;
+      }
       setState(() {});
     }
   }
@@ -89,11 +89,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
       return;
     }
     _form.currentState.save();
-
     setState(() {
       _isLoading = true;
     });
-
     if (_editedProduct.id != null) {
       Provider.of<Products>(context, listen: false)
           .updateProduct(_editedProduct.id, _editedProduct);
@@ -106,48 +104,50 @@ class _EditProductScreenState extends State<EditProductScreen> {
         await Provider.of<Products>(context, listen: false)
             .addProduct(_editedProduct);
       } catch (error) {
-        await showDialog(context: context,
-            builder: (ctx) =>
-                AlertDialog(
-                  title: Text('Error!'),
-                  content: Text('Opps something went wrong.'),
-                  actions: <Widget>[
-                    FlatButton(child: Text('OK'), onPressed: () {
-                      Navigator.of(ctx).pop();
-                    },)
-                  ],
-                ));
-      }
-      finally {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('An error occurred!'),
+            content: Text('Something went wrong.'),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Okay'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+              )
+            ],
+          ),
+        );
+      } finally {
         setState(() {
           _isLoading = false;
         });
-        Navigator.of(context).pop(
-        );
+        Navigator.of(context).pop();
       }
     }
+    // Navigator.of(context).pop();
   }
-//    Navigator.of(context).pop();
-}
 
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Edit Product'),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.done),
-          onPressed: _saveForm,
-        )
-      ],
-    ),
-    body: _isLoading
-        ? Center(
-      child: CircularProgressIndicator(),
-    )
-        : Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Form(
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Product'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: _saveForm,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? Center(
+        child: CircularProgressIndicator(),
+      )
+          : Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
           key: _form,
           child: ListView(
             children: <Widget>[
@@ -160,19 +160,18 @@ Widget build(BuildContext context) {
                 },
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Empty title can\'t be assigned';
+                    return 'Please provide a value.';
                   }
                   return null;
                 },
                 onSaved: (value) {
                   _editedProduct = Product(
-                    title: value,
-                    price: _editedProduct.price,
-                    description: _editedProduct.description,
-                    imageURL: _editedProduct.imageURL,
-                    id: _editedProduct.id,
-                    isFavorite: _editedProduct.isFavorite,
-                  );
+                      title: value,
+                      price: _editedProduct.price,
+                      description: _editedProduct.description,
+                      imageURL: _editedProduct.imageURL,
+                      id: _editedProduct.id,
+                      isFavorite: _editedProduct.isFavorite);
                 },
               ),
               TextFormField(
@@ -187,25 +186,24 @@ Widget build(BuildContext context) {
                 },
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Price must be assigned';
+                    return 'Please enter a price.';
                   }
                   if (double.tryParse(value) == null) {
-                    return 'Price must be a valid number.';
+                    return 'Please enter a valid number.';
                   }
                   if (double.parse(value) <= 0) {
-                    return 'Price must be greater than zero.';
+                    return 'Please enter a number greater than zero.';
                   }
                   return null;
                 },
                 onSaved: (value) {
                   _editedProduct = Product(
-                    title: _editedProduct.title,
-                    price: double.parse(value),
-                    description: _editedProduct.description,
-                    imageURL: _editedProduct.imageURL,
-                    id: _editedProduct.id,
-                    isFavorite: _editedProduct.isFavorite,
-                  );
+                      title: _editedProduct.title,
+                      price: double.parse(value),
+                      description: _editedProduct.description,
+                      imageURL: _editedProduct.imageURL,
+                      id: _editedProduct.id,
+                      isFavorite: _editedProduct.isFavorite);
                 },
               ),
               TextFormField(
@@ -216,12 +214,11 @@ Widget build(BuildContext context) {
                 focusNode: _descriptionFocusNode,
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter description.';
+                    return 'Please enter a description.';
                   }
                   if (value.length < 10) {
-                    return 'Description too short.';
+                    return 'Should be at least 10 characters long.';
                   }
-
                   return null;
                 },
                 onSaved: (value) {
@@ -241,40 +238,48 @@ Widget build(BuildContext context) {
                   Container(
                     width: 100,
                     height: 100,
-                    margin: EdgeInsets.all(10.0),
+                    margin: EdgeInsets.only(
+                      top: 8,
+                      right: 10,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(
-                          width: 1,
-                          color: Theme
-                              .of(context)
-                              .accentColor),
+                        width: 1,
+                        color: Colors.grey,
+                      ),
                     ),
-                    child: _imageUrlController.text.isEmpty
-                        ? Text('Enter the URL for Image')
+                    child: _imageURLController.text.isEmpty
+                        ? Text('Enter a URL')
                         : FittedBox(
                       child: Image.network(
-                        _imageUrlController.text,
+                        _imageURLController.text,
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
                   Expanded(
                     child: TextFormField(
-//                        initialValue: _initValues['imageURL'],
-                      decoration:
-                      InputDecoration(labelText: 'Image Url'),
+                      decoration: InputDecoration(labelText: 'Image URL'),
                       keyboardType: TextInputType.url,
                       textInputAction: TextInputAction.done,
-                      controller: _imageUrlController,
-                      focusNode: _imageUrlFocusNode,
+                      controller: _imageURLController,
+                      focusNode: _imageURLFocusNode,
+                      onFieldSubmitted: (_) {
+                        _saveForm();
+                      },
                       validator: (value) {
                         if (value.isEmpty) {
-                          return 'Please enter Image URL.';
+                          return 'Please enter an image URL.';
                         }
-                        if (value.length < 5) {
-                          return 'URL not valid.';
+                        if (!value.startsWith('http') &&
+                            !value.startsWith('https')) {
+                          return 'Please enter a valid URL.';
                         }
-
+                        if (!value.endsWith('.png') &&
+                            !value.endsWith('.jpg') &&
+                            !value.endsWith('.jpeg')) {
+                          return 'Please enter a valid image URL.';
+                        }
                         return null;
                       },
                       onSaved: (value) {
@@ -287,15 +292,14 @@ Widget build(BuildContext context) {
                           isFavorite: _editedProduct.isFavorite,
                         );
                       },
-                      onFieldSubmitted: (_) {
-                        _saveForm();
-                      },
                     ),
                   ),
                 ],
-              )
+              ),
             ],
-          )),
-    ),
-  );
-}}
+          ),
+        ),
+      ),
+    );
+  }
+}
